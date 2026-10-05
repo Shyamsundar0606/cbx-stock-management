@@ -66,7 +66,7 @@ export function Field({
           props.style,
         ]}
       />
-      {error && (
+      {!!error && (
         <Text accessibilityRole="alert" style={styles.error}>
           {error}
         </Text>
@@ -125,7 +125,7 @@ export function Feedback({
   return (
     <View style={{ padding: 24, gap: 16, alignItems: "center" }}>
       {loading && <ActivityIndicator size="large" color={colors.primary} />}
-      {error && (
+      {!!error && (
         <>
           <Text accessibilityRole="alert" style={styles.error}>
             {error}

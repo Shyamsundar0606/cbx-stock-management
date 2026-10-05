@@ -160,7 +160,7 @@ export function DetailScreen({
                 />
               </View>
             </View>
-            {success && (
+            {!!success && (
               <Text accessibilityRole="alert" style={{ color: colors.primary }}>
                 {success}
               </Text>
