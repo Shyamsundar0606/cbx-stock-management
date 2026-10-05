@@ -39,9 +39,9 @@ export function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={loading} onRefresh={loadDashboard} />}
     >
       <View>
-        <Text style={styles.title}>Overview</Text>
+        <Text style={styles.title}>Dashboard</Text>
         <Text style={[styles.subtitle, { marginTop: 8 }]}>
-          See what is available and what needs restocking.
+          Stock totals and products by category.
         </Text>
       </View>
       {error ? (
@@ -81,7 +81,7 @@ export function DashboardScreen() {
             {dashboard.categories.length === 0 ? (
               <Text style={styles.subtitle}>Add a product to see the category breakdown.</Text>
             ) : (
-              dashboard.categories.map((category, index) => (
+              dashboard.categories.map((category) => (
                 <View
                   key={category.category}
                   accessibilityLabel={`${category.category} : ${category.count} products`}
@@ -95,7 +95,7 @@ export function DashboardScreen() {
                     style={{
                       height: 12,
                       backgroundColor: '#EEF2F3',
-                      borderRadius: 6,
+                      borderRadius: 2,
                       overflow: 'hidden',
                     }}
                   >
@@ -103,21 +103,14 @@ export function DashboardScreen() {
                       style={{
                         height: 12,
                         width: `${(category.count / largestCategory) * 100}%`,
-                        borderRadius: 6,
-                        backgroundColor: ['#12695C', '#59948A', '#A1BBB0', '#D4AF6D'][index % 4],
+                        borderRadius: 2,
+                        backgroundColor: colors.primary,
                       }}
                     />
                   </View>
                 </View>
               ))
             )}
-          </View>
-          <View style={[styles.card, { backgroundColor: '#E8F4EE' }]}>
-            <Text style={styles.section}>When does stock need attention?</Text>
-            <Text style={styles.subtitle}>
-              Low stock means the quantity is above zero but at or below the alert threshold.
-              Out-of-stock products are counted separately.
-            </Text>
           </View>
         </>
       )}

@@ -19,14 +19,11 @@ function Home() {
       screenOptions={({ route }) => ({
         headerTitle: 'CBX Stock',
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: colors.bg },
-        headerTitleStyle: { color: colors.ink, fontWeight: '700' },
+        headerStyle: { backgroundColor: '#FFFFFF' },
+        headerTitleStyle: { color: colors.ink, fontWeight: '600' },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          height: 78,
-          paddingTop: 8,
-          paddingBottom: 16,
           borderTopColor: colors.line,
         },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
@@ -48,7 +45,7 @@ export default function App() {
         <Stack.Navigator
           screenOptions={{
             headerTintColor: colors.primary,
-            headerStyle: { backgroundColor: colors.bg },
+            headerStyle: { backgroundColor: '#FFFFFF' },
             headerShadowVisible: false,
             headerBackButtonDisplayMode: 'minimal',
           }}

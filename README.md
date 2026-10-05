@@ -1,8 +1,8 @@
-# CBX Stock
+# Stock Management App
 
-A small warehouse inventory app built with React Native and TypeScript. You can look up products, record stock coming in or going out, and see which items need restocking.
+This is my solution to the mobile stock management exercise. The goal was to build a small app with the required screens and a working backend. I kept the layout basic and used React state hooks instead of adding a state management library.
 
-## Run it
+## Setup
 
 You need Node.js 24 LTS, npm, and Expo Go compatible with SDK 57.
 
@@ -13,142 +13,89 @@ npm ci
 npx expo start
 ```
 
-The install command also installs the backend. Starting Expo starts the API on port 3000 and creates the SQLite database with six sample products. There are no API keys or environment files to set up.
+The backend starts automatically on port 3000. SQLite creates its database and adds six example products the first time you run it. No `.env` file is needed.
 
-Scan the QR code with Expo Go. Keep your phone and computer on the same local network. The app gets the API address from the Expo server, so you do not need to put your IP address in the code. Your firewall needs to allow local access to ports 3000 and 8081.
+Press `w` to open the browser preview. For a phone, scan the QR code with Expo Go and keep the phone and computer on the same Wi-Fi. The app uses the Expo server address to find the API. Allow local access to ports 3000 and 8081 if your firewall blocks them.
 
-Press `a` in the Expo terminal for an Android emulator, `i` for the iOS simulator on macOS, or `w` for the browser. You can also run the browser preview directly:
+Press `a` for an Android emulator, or `i` for an iOS simulator on macOS. You can also use `npm run web` for the browser.
 
-```bash
-npm run web
-```
+Stop any running Expo or API process with Ctrl+C before reinstalling dependencies. On Windows, a running backend can lock `esbuild.exe` and make `npm ci` fail.
 
-If the app cannot reach the API, check that the terminal shows `Stock API: http://localhost:3000` and that both devices are on the same network. Expo's tunnel mode only tunnels the Expo server, not this API.
+## Features
 
-## What is included
+- Product list with search and category filters.
+- Normal, low-stock and out-of-stock labels.
+- Product details and stock entry/exit forms.
+- Add and edit products with input validation.
+- Stock movement history.
+- A basic dashboard with totals and a category bar chart.
 
-- Product list with search, category filtering, and an alerts-only filter.
-- Product details, descriptions, stock quantities, thresholds, and last-updated dates.
-- Add and edit forms with required fields, unique references, and whole-number validation.
-- Stock entries and exits with a history of the last 50 movements.
-- Dashboard with product totals, stock alerts, and a category chart.
-- Loading and empty states, retry buttons, pull-to-refresh, and accessible labels.
+Low stock means `0 < quantity <= threshold`. Out of stock means `quantity = 0`. A stock exit cannot make the quantity negative. References must be unique, and quantities must be whole numbers.
 
-A product has normal stock when its quantity is above the threshold, low stock when it is at or below the threshold but above zero, and no stock when it reaches zero. The dashboard counts low stock and out-of-stock items separately.
+## Technical choices
 
-Quantities and thresholds can be whole numbers from 0 to 1,000,000. Stock movements must be positive. Removing more than is available returns an error and leaves both the stock and history unchanged.
+I used **Expo with React Native and TypeScript** to keep the setup simple. **React Navigation** provides the product/detail/form stack and the two bottom tabs. The app uses `useState` and reloads data when a screen gets focus.
 
-Editing a quantity in the product form is an inventory correction. Use the stock buttons when you want to record an entry or exit in the movement history.
+The backend uses **Express and SQLite**. SQLite is a separate server-side database, not local storage in the app. Node 24 includes SQLite support, so no separate database server is needed. A transaction keeps each stock update and its history entry together.
 
-## Screenshots
+Versions: Expo 57.0.26, React Native 0.86.3, React 19.2.3, TypeScript 6.0.3, React Navigation 7 and Express 5.2.1.
 
-These are actual browser-preview screenshots at a phone-sized viewport. A fresh database starts with six sample products; the extra product shown here was added while checking the forms.
-
-| Inventory                                                                             | Product details                                                                           |
-| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| <img src="docs/inventory.jpg" width="280" alt="Product list with search and filters"> | <img src="docs/product-details.jpg" width="280" alt="Product details with stock actions"> |
-
-| Product form                                                         | Dashboard                                                                     |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| <img src="docs/product-form.jpg" width="280" alt="New product form"> | <img src="docs/dashboard.jpg" width="280" alt="Dashboard and category chart"> |
-
-## Why this stack
-
-Expo keeps the mobile setup simple. React Navigation handles the stack for product pages and forms, with tabs for the inventory and dashboard. React state hooks are enough for this app; each screen fetches current data when it gets focus.
-
-Express exposes the REST API. SQLite lives on the server in `backend/data/stock.sqlite`, so the app uses a real database rather than local storage. Node 24 includes SQLite support, which avoids installing a separate database server or compiling a native package.
-
-Stock movements use a SQLite transaction. The quantity update and history entry either both succeed or both roll back. SQL parameters, foreign keys, quantity constraints, and a case-insensitive unique reference also protect the data.
-
-The versions used are Expo 57.0.26, React Native 0.86.3, React 19.2.3, TypeScript 6.0.3, React Navigation 7, and Express 5.2.1. Development and tests use Node 24.17.0. Exact dependency versions are recorded in the lockfiles.
-
-## Code layout
+## Project structure
 
 ```text
 src/
-  App.tsx                 Navigation setup
-  api.ts                  HTTP requests and API address
-  types.ts                Product types and stock status
-  components/             Shared controls and product cards
-  screens/                Inventory, details, form, and dashboard
+  App.tsx          Navigation
+  api.ts           Requests to the backend
+  types.ts         Shared app types
+  components/      Buttons, fields and product cards
+  screens/         Products, details, form and dashboard
 backend/
-  src/app.ts              Express setup and error handling
-  src/index.ts            Server startup and shutdown
-  src/database/           SQLite schema and sample products
-  src/controllers/        Input validation
-  src/models/             Product input type
-  src/routes/             REST endpoints and stock transactions
-  tests/                  API and database integration tests
-scripts/                  Start the API alongside Expo
-docs/                     Screenshots
+  src/database/    SQLite setup and example data
+  src/controllers/ Input validation
+  src/routes/      API endpoints
+  tests/           Integration tests
+scripts/           Starts the API with Expo
 ```
 
-## API
+## API endpoints
 
-The default base URL is `http://localhost:3000/api`.
+Base URL: `http://localhost:3000/api`.
 
-| Method | Path                      | Purpose                                                         |
-| ------ | ------------------------- | --------------------------------------------------------------- |
-| GET    | `/health`                 | Check the server                                                |
-| GET    | `/products`               | List products; accepts `search` and `category` query parameters |
-| GET    | `/products/:id`           | Get one product                                                 |
-| POST   | `/products`               | Create a product                                                |
-| PUT    | `/products/:id`           | Update all product fields                                       |
-| GET    | `/products/:id/movements` | Get the last 50 movements                                       |
-| POST   | `/products/:id/movements` | Record a stock entry or exit                                    |
-| GET    | `/dashboard`              | Get totals and category counts                                  |
+| Method | Path                      | Description                                            |
+| ------ | ------------------------- | ------------------------------------------------------ |
+| GET    | `/products`               | List products; optional search and category parameters |
+| GET    | `/products/:id`           | Product details                                        |
+| POST   | `/products`               | Create a product                                       |
+| PUT    | `/products/:id`           | Update a product                                       |
+| POST   | `/products/:id/movements` | Add or remove stock                                    |
+| GET    | `/products/:id/movements` | Recent stock movements                                 |
+| GET    | `/dashboard`              | Stock totals and category counts                       |
+| GET    | `/health`                 | Server health check                                    |
 
-Example product body:
+A movement body is `{ "direction": "in", "quantity": 5 }`, or use `"out"` for a stock exit. Validation errors return a message with status 400; duplicate references or insufficient stock return 409.
 
-```json
-{
-  "name": "Box of screws",
-  "reference": "OUT-003",
-  "description": "5mm screws",
-  "category": "Tools",
-  "quantity": 20,
-  "threshold": 5
-}
-```
+## Screenshots
 
-Example movement body:
+The screenshots below show the earlier layout at phone width. The current version uses simpler blue buttons and smaller, plain panels; the features are the same. The extra product was added during testing.
 
-```json
-{ "direction": "out", "quantity": 3 }
-```
+<img src="docs/inventory.jpg" width="250" alt="Product list"> <img src="docs/product-details.jpg" width="250" alt="Product details">
 
-Errors return a `message` field. Invalid input returns 400, missing products return 404, and duplicate references or insufficient stock return 409. New products and movements return 201.
+<img src="docs/product-form.jpg" width="250" alt="Product form"> <img src="docs/dashboard.jpg" width="250" alt="Dashboard">
 
 ## Checks
 
 ```bash
 npm run lint
 npm run check
-npx expo install --check
 npx expo export --platform all
 ```
 
-The integration tests cover creation, updates, filters, duplicate references, invalid input, concurrent stock exits, movement history, dashboard counts, and persistence after reopening the database. They use separate test databases. GitHub Actions runs the same checks and exports the Android, iOS, and web bundles.
+The tests cover product validation, duplicate references, stock movements, concurrent exits and SQLite persistence. GitHub Actions runs the checks too. Browser flows have been checked; Android and iOS bundles have been exported, but I have not tested on a physical device or native simulator in this environment.
 
-The browser flows have been checked at a phone-sized viewport. Native bundles have been exported, but the app has not been tested on a physical phone or native simulator in this environment.
+## Notes
 
-## Optional configuration
+The database is saved in `backend/data/stock.sqlite` and excluded from Git. Data stays after a restart. Editing a quantity in the product form is an inventory correction; use the stock buttons to record a movement.
 
-Defaults work for local development. If you need another setup:
+Optional settings: `EXPO_PUBLIC_API_URL` for another API address (including `/api`), `DATABASE_PATH` for another database file, `PORT` for a separately started API, and `STOCK_SKIP_API=1` to skip automatic API startup. Run `npm run api` to start the API separately. Expo tunnel mode does not tunnel the backend.
 
-| Variable              | Purpose                            |
-| --------------------- | ---------------------------------- |
-| `EXPO_PUBLIC_API_URL` | API URL, including `/api`          |
-| `DATABASE_PATH`       | SQLite file path                   |
-| `PORT`                | Port for an API started separately |
-| `STOCK_SKIP_API=1`    | Skip automatic API startup         |
-
-Use `npm run api` to run the backend separately. For a compiled backend, run `npm --prefix backend run build` followed by `npm --prefix backend start`. If you change the API port, set `EXPO_PUBLIC_API_URL` too.
-
-The database is ignored by Git and survives restarts. To start over, stop the server, back up the database, and remove the files in `backend/data/`. The next start recreates the sample data. Existing product text is stored as entered; changing the app language does not automatically translate custom product names.
-
-## Scope
-
-The dashboard bonus is included. Local notifications are not implemented. This exercise uses a local warehouse API without authentication, offline sync, or pagination. A production deployment would need HTTPS, authentication, and restricted CORS.
-
-The backend dependency audit was clean when checked. Expo's development tooling still has transitive advisories after compatible fixes; the forced npm fix proposes an incompatible Expo downgrade, so it was not applied.
+The dashboard bonus is included. Local notifications, authentication and offline mode are not implemented. For production I would add authentication, HTTPS and pagination. Expo tooling has some transitive dependency advisories; the backend audit was clean when checked.

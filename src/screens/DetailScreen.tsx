@@ -97,8 +97,8 @@ export function DetailScreen({ route, navigation }: NativeStackScreenProps<Stack
               </View>
             </View>
             <View style={styles.card}>
-              <Text style={styles.subtitle}>AVAILABLE STOCK</Text>
-              <Text style={[styles.number, { fontSize: 56 }]}>
+              <Text style={styles.subtitle}>Quantity in stock</Text>
+              <Text style={styles.number}>
                 {product.quantity}
                 <Text
                   style={{
@@ -120,7 +120,7 @@ export function DetailScreen({ route, navigation }: NativeStackScreenProps<Stack
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Button
-                  title="＋ Add stock"
+                  title="Add stock"
                   disabled={saving}
                   onPress={() => {
                     setDirection('in');
@@ -131,7 +131,7 @@ export function DetailScreen({ route, navigation }: NativeStackScreenProps<Stack
               </View>
               <View style={{ flex: 1 }}>
                 <Button
-                  title="− Remove stock"
+                  title="Remove stock"
                   secondary
                   disabled={saving || product.quantity === 0}
                   onPress={() => {

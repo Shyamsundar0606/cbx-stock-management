@@ -18,7 +18,7 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
     >
       <View style={styles.row}>
         <Text style={cardStyles.reference}>
-          {product.category.toUpperCase()} · {product.reference}
+          {product.category} · {product.reference}
         </Text>
         <Status product={product} />
       </View>
@@ -37,5 +37,5 @@ const cardStyles = StyleSheet.create({
   pressed: { opacity: 0.7 },
   reference: { color: colors.muted, fontSize: 12, fontWeight: '600', flex: 1 },
   name: { fontSize: 18, color: colors.ink, fontWeight: '700' },
-  quantity: { fontSize: 24, fontWeight: '800', color: colors.ink },
+  quantity: { fontSize: 20, fontWeight: '600', color: colors.ink },
 });

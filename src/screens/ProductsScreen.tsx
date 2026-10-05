@@ -73,44 +73,12 @@ export function ProductsScreen() {
           />
         }
         ListHeaderComponent={
-          <View style={{ gap: 20 }}>
-            <View>
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: 12,
-                  fontWeight: '800',
-                  letterSpacing: 2,
-                  marginBottom: 8,
-                }}
-              >
-                CBX / WAREHOUSE
-              </Text>
-              <Text style={styles.title}>
-                Your stock,
-                <Text style={{ color: colors.primary }}> at a glance.</Text>
-              </Text>
-              <Text style={[styles.subtitle, { marginTop: 8 }]}>
-                Check quantities and keep track of stock changes.
-              </Text>
-            </View>
-            <View style={[styles.card, { backgroundColor: '#172F33', borderColor: '#172F33' }]}>
-              <View style={styles.row}>
-                <View>
-                  <Text style={{ color: '#ADC9C3', fontSize: 12 }}>PRODUCTS</Text>
-                  <Text style={[styles.number, { color: 'white', marginTop: 6 }]}>
-                    {products.length}
-                  </Text>
-                </View>
-                <View>
-                  <Text style={{ color: '#ADC9C3', fontSize: 12 }}>NEED ATTENTION</Text>
-                  <Text style={[styles.number, { color: '#F1C77A', marginTop: 6 }]}>
-                    {alertCount}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <Button title="＋ Add product" onPress={() => navigation.navigate('Form')} />
+          <View style={{ gap: 16 }}>
+            <Text style={styles.title}>Products</Text>
+            <Text style={styles.subtitle}>
+              {products.length} products · {alertCount} stock alerts
+            </Text>
+            <Button title="Add product" onPress={() => navigation.navigate('Form')} />
             <TextInput
               accessibilityLabel="Search by name or reference"
               style={styles.input}

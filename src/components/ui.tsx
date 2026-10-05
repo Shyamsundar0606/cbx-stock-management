@@ -11,13 +11,13 @@ import {
 import { Product, stockStatus } from '../types';
 
 export const colors = {
-  bg: '#F4F6F8',
-  ink: '#172B36',
-  muted: '#6C7C85',
-  primary: '#12695C',
-  line: '#E1E7EB',
-  red: '#B43F45',
-  amber: '#95600A',
+  bg: '#F5F5F5',
+  ink: '#222222',
+  muted: '#666666',
+  primary: '#2563EB',
+  line: '#D9D9D9',
+  red: '#B91C1C',
+  amber: '#92400E',
 };
 
 export function Button({
@@ -81,7 +81,7 @@ export function Status({ product }: { product: Pick<Product, 'quantity' | 'thres
   const appearance = {
     out: { label: 'Out of stock', color: colors.red, background: '#FCEBEC' },
     low: { label: 'Low stock', color: colors.amber, background: '#FFF4DE' },
-    normal: { label: 'Normal', color: colors.primary, background: '#E8F4EE' },
+    normal: { label: 'Normal', color: '#15803D', background: '#E8F4EE' },
   }[status];
 
   return (
@@ -128,23 +128,23 @@ export function Feedback({
 export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bg },
   content: {
-    padding: 20,
-    gap: 20,
+    padding: 16,
+    gap: 16,
     width: '100%',
-    maxWidth: 760,
+    maxWidth: 640,
     alignSelf: 'center',
   },
   title: {
-    fontSize: 30,
-    fontWeight: '800',
-    letterSpacing: -0.8,
+    fontSize: 24,
+    fontWeight: '600',
+    letterSpacing: 0,
     color: colors.ink,
   },
   subtitle: { fontSize: 14, color: colors.muted, lineHeight: 22 },
   section: { fontSize: 18, fontWeight: '700', color: colors.ink },
   card: {
-    padding: 18,
-    borderRadius: 18,
+    padding: 14,
+    borderRadius: 6,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: colors.line,
@@ -158,19 +158,19 @@ export const styles = StyleSheet.create({
   },
   button: {
     minHeight: 50,
-    borderRadius: 12,
+    borderRadius: 4,
     backgroundColor: colors.primary,
     paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  secondary: { backgroundColor: '#E8F4EE' },
+  secondary: { backgroundColor: '#E8EDF5' },
   buttonText: { color: 'white', fontWeight: '700', fontSize: 15 },
   input: {
     minHeight: 50,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 12,
+    borderRadius: 4,
     paddingHorizontal: 14,
     paddingVertical: 12,
     color: colors.ink,
@@ -185,17 +185,17 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 4,
   },
   chip: {
     minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: 16,
-    borderRadius: 24,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: 'white',
   },
-  number: { fontSize: 32, fontWeight: '800', color: colors.ink },
+  number: { fontSize: 28, fontWeight: '600', color: colors.ink },
   divider: { height: 1, backgroundColor: colors.line },
 });
