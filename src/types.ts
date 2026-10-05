@@ -8,14 +8,17 @@ export type Product = {
   threshold: number;
   updatedAt: string;
 };
-export type ProductInput = Omit<Product, "id" | "updatedAt">;
+
+export type ProductInput = Omit<Product, 'id' | 'updatedAt'>;
+
 export type Movement = {
   id: number;
   productId: number;
-  direction: "in" | "out";
+  direction: 'in' | 'out';
   quantity: number;
   createdAt: string;
 };
+
 export type Dashboard = {
   total: number;
   outOfStock: number;
@@ -23,10 +26,19 @@ export type Dashboard = {
   units: number;
   categories: { category: string; count: number }[];
 };
+
 export type StackParams = {
   Home: undefined;
   Detail: { id: number };
   Form: { id?: number } | undefined;
 };
-export const stockStatus = (p: Pick<Product, "quantity" | "threshold">) =>
-  p.quantity === 0 ? "out" : p.quantity <= p.threshold ? "low" : "normal";
+
+export function stockStatus(product: Pick<Product, 'quantity' | 'threshold'>) {
+  if (product.quantity === 0) {
+    return 'out';
+  }
+  if (product.quantity <= product.threshold) {
+    return 'low';
+  }
+  return 'normal';
+}

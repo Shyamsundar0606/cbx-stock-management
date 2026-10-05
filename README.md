@@ -1,10 +1,10 @@
-# CBX Stock — gestion de stock mobile
+# CBX Stock
 
-Application React Native en TypeScript pour un entrepôt fictif. Les données sont servies par une véritable API Express et conservées dans une base SQLite dédiée, côté serveur. Aucun stockage local ne simule le backend.
+A small warehouse inventory app built with React Native and TypeScript. You can look up products, record stock coming in or going out, and see which items need restocking.
 
-## Lancer le projet
+## Run it
 
-Prérequis : **Node.js 24 LTS**, npm et Expo Go compatible SDK 57 sur le téléphone. Aucun compte cloud, Docker, clé API ou fichier `.env` n’est nécessaire.
+You need Node.js 24 LTS, npm, and Expo Go compatible with SDK 57.
 
 ```bash
 git clone https://github.com/Shyamsundar0606/cbx-stock-management.git
@@ -13,119 +13,113 @@ npm ci
 npx expo start
 ```
 
-`npm ci` installe aussi le backend. `npx expo start` démarre automatiquement l’API sur le port **3000**, initialise SQLite et insère six produits d’exemple au premier lancement. Scanner le QR code avec Expo Go. Le téléphone et l’ordinateur doivent être sur le **même réseau local**, et les ports 3000 et 8081 doivent être accessibles depuis le téléphone. L’adresse de l’API est déduite de l’hôte Expo : pas d’adresse IP à modifier dans le code.
+The install command also installs the backend. Starting Expo starts the API on port 3000 and creates the SQLite database with six sample products. There are no API keys or environment files to set up.
 
-Dans le terminal Expo : `a` ouvre Android (émulateur installé), `i` ouvre iOS (macOS et simulateur requis), `w` ouvre l’aperçu web. Pour démarrer directement le web :
+Scan the QR code with Expo Go. Keep your phone and computer on the same local network. The app gets the API address from the Expo server, so you do not need to put your IP address in the code. Your firewall needs to allow local access to ports 3000 and 8081.
+
+Press `a` in the Expo terminal for an Android emulator, `i` for the iOS simulator on macOS, or `w` for the browser. You can also run the browser preview directly:
 
 ```bash
 npm run web
 ```
 
-En cas d’API inaccessible, vérifier que le serveur affiche `Stock API: http://localhost:3000`, que les appareils sont sur le même réseau et que le pare-feu autorise les connexions locales. Le mode `--tunnel` d’Expo ne publie pas l’API : utiliser le réseau local ou une API distante configurée explicitement.
+If the app cannot reach the API, check that the terminal shows `Stock API: http://localhost:3000` and that both devices are on the same network. Expo's tunnel mode only tunnels the Expo server, not this API.
 
-## Fonctionnalités
+## What is included
 
-- Inventaire avec nom, référence, catégorie, quantité, seuil et badge textuel/coloré.
-- Recherche par nom ou référence, filtre par catégorie et filtre « Alertes seules ».
-- Détail avec description, date de mise à jour, entrées/sorties et historique des 50 derniers mouvements.
-- Création et modification avec validation des champs obligatoires, références uniques et nombres entiers.
-- Tableau de bord : nombre de produits, unités, ruptures, stock faible et graphique par catégorie.
-- Chargement, listes vides, erreurs réseau, nouvelle tentative et actualisation par glissement.
-- Boutons d’au moins 44 points et libellés d’accessibilité. Formulaires défilants avec adaptation au clavier iOS.
+- Product list with search, category filtering, and an alerts-only filter.
+- Product details, descriptions, stock quantities, thresholds, and last-updated dates.
+- Add and edit forms with required fields, unique references, and whole-number validation.
+- Stock entries and exits with a history of the last 50 movements.
+- Dashboard with product totals, stock alerts, and a category chart.
+- Loading and empty states, retry buttons, pull-to-refresh, and accessible labels.
 
-**États :** normal si quantité > seuil ; faible si 0 < quantité ≤ seuil ; rupture si quantité = 0. Le compteur des alertes regroupe faible et rupture ; le tableau de bord les compte séparément.
+A product has normal stock when its quantity is above the threshold, low stock when it is at or below the threshold but above zero, and no stock when it reaches zero. The dashboard counts low stock and out-of-stock items separately.
 
-Les quantités et seuils acceptent les entiers de 0 à 1 000 000. Un mouvement doit être strictement positif ; une sortie supérieure au stock reçoit une erreur sans aucune modification. Les corrections de quantité via le formulaire modifient l’inventaire directement ; utiliser les mouvements pour tracer une entrée ou sortie.
+Quantities and thresholds can be whole numbers from 0 to 1,000,000. Stock movements must be positive. Removing more than is available returns an error and leaves both the stock and history unchanged.
 
-## Captures
+Editing a quantity in the product form is an inventory correction. Use the stock buttons when you want to record an entry or exit in the movement history.
 
-Captures réelles de l’aperçu React Native Web à **390 × 844**, après vérification des parcours. Le produit « Étiquettes de stockage » a été ajouté pendant la démonstration ; une nouvelle base contient les six produits initiaux.
+## Screenshots
 
-| Inventaire                                                                      | Détail                                                                   |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| <img src="docs/inventaire.jpg" width="280" alt="Liste des produits et filtres"> | <img src="docs/detail.jpg" width="280" alt="Détail et actions de stock"> |
+These are actual browser-preview screenshots at a phone-sized viewport. A fresh database starts with six sample products; the extra product shown here was added while checking the forms.
 
-| Formulaire                                                               | Tableau de bord                                                                               |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| <img src="docs/formulaire.jpg" width="280" alt="Formulaire de création"> | <img src="docs/tableau-de-bord.jpg" width="280" alt="Indicateurs et graphique par catégorie"> |
+| Inventory                                                                             | Product details                                                                           |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| <img src="docs/inventory.jpg" width="280" alt="Product list with search and filters"> | <img src="docs/product-details.jpg" width="280" alt="Product details with stock actions"> |
 
-## Choix techniques et versions
+| Product form                                                         | Dashboard                                                                     |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| <img src="docs/product-form.jpg" width="280" alt="New product form"> | <img src="docs/dashboard.jpg" width="280" alt="Dashboard and category chart"> |
 
-| Élément              | Version                   | Choix                                                                           |
-| -------------------- | ------------------------- | ------------------------------------------------------------------------------- |
-| Node.js              | 24 LTS (testé en 24.17.0) | SQLite natif avec `node:sqlite`, sans compilation d’un module externe           |
-| Expo                 | 57.0.26                   | Lancement rapide avec Expo Go, exports Android/iOS/web                          |
-| React Native / React | 0.86.3 / 19.2.3           | Une base de code pour les trois plateformes                                     |
-| TypeScript           | 6.0.3                     | Typage strict du mobile et du backend                                           |
-| React Navigation     | 7                         | Stack native pour le détail/formulaire, onglets pour inventaire/tableau de bord |
-| Express              | 5.2.1                     | API REST compacte, middleware de validation et erreurs centralisées             |
-| SQLite               | embarqué dans Node.js     | Base persistante dédiée et transactions atomiques                               |
+## Why this stack
 
-L’état est géré avec les hooks React. Les écrans rechargent les données à la prise de focus pour refléter les changements ; aucun cache local de stock n’est utilisé. Les composants `Button`, `Field`, `Status` et `Feedback` sont réutilisés entre les écrans. Les requêtes ont un délai maximum de 10 secondes et renvoient des messages exploitables.
+Expo keeps the mobile setup simple. React Navigation handles the stack for product pages and forms, with tabs for the inventory and dashboard. React state hooks are enough for this app; each screen fetches current data when it gets focus.
 
-Les mouvements s’exécutent dans une transaction `BEGIN IMMEDIATE` : lecture de la quantité, validation, mise à jour et insertion de l’historique forment une opération indivisible. SQLite impose aussi des contraintes de quantité, une référence unique insensible à la casse et des clés étrangères. Toutes les valeurs SQL sont paramétrées. WAL et un délai d’attente de verrouillage facilitent les accès concurrents.
+Express exposes the REST API. SQLite lives on the server in `backend/data/stock.sqlite`, so the app uses a real database rather than local storage. Node 24 includes SQLite support, which avoids installing a separate database server or compiling a native package.
 
-Références : [compatibilité Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/), [React Navigation](https://reactnavigation.org/docs/getting-started/).
+Stock movements use a SQLite transaction. The quantity update and history entry either both succeed or both roll back. SQL parameters, foreign keys, quantity constraints, and a case-insensitive unique reference also protect the data.
 
-## Structure
+The versions used are Expo 57.0.26, React Native 0.86.3, React 19.2.3, TypeScript 6.0.3, React Navigation 7, and Express 5.2.1. Development and tests use Node 24.17.0. Exact dependency versions are recorded in the lockfiles.
+
+## Code layout
 
 ```text
 src/
-  App.tsx                   Navigation principale
-  api.ts                    Client REST et détection de l’hôte
-  types.ts                  Types et règles d’état du stock
-  components/ui.tsx         Composants partagés et thème
-  screens/                  Inventaire, détail, formulaire, tableau de bord
+  App.tsx                 Navigation setup
+  api.ts                  HTTP requests and API address
+  types.ts                Product types and stock status
+  components/             Shared controls and product cards
+  screens/                Inventory, details, form, and dashboard
 backend/
-  src/app.ts                Fabrique Express et traitement des erreurs
-  src/index.ts              Serveur et arrêt propre
-  src/database/db.ts        Schéma SQLite et données initiales
-  src/models/Product.ts     Modèle d’entrée
-  src/controllers/          Validation des produits et des quantités
-  src/routes/               Endpoints REST et transactions de stock
-  tests/api.test.cjs         Tests d’intégration et de persistance
-scripts/ensure-api.cjs       Démarrage automatique de l’API avec Expo
-.github/workflows/          Vérification CI
-docs/                       Captures d’écran
+  src/app.ts              Express setup and error handling
+  src/index.ts            Server startup and shutdown
+  src/database/           SQLite schema and sample products
+  src/controllers/        Input validation
+  src/models/             Product input type
+  src/routes/             REST endpoints and stock transactions
+  tests/                  API and database integration tests
+scripts/                  Start the API alongside Expo
+docs/                     Screenshots
 ```
 
 ## API
 
-URL locale : `http://localhost:3000/api`.
+The default base URL is `http://localhost:3000/api`.
 
-| Méthode | Endpoint                            | Description                               |
-| ------- | ----------------------------------- | ----------------------------------------- |
-| GET     | `/health`                           | Santé du serveur                          |
-| GET     | `/products?search=...&category=...` | Liste et filtres optionnels               |
-| GET     | `/products/:id`                     | Détail                                    |
-| POST    | `/products`                         | Créer un produit                          |
-| PUT     | `/products/:id`                     | Remplacer les champs d’un produit         |
-| POST    | `/products/:id/movements`           | Entrée/sortie atomique                    |
-| GET     | `/products/:id/movements`           | Les 50 derniers mouvements                |
-| GET     | `/dashboard`                        | Statistiques et répartition par catégorie |
+| Method | Path                      | Purpose                                                         |
+| ------ | ------------------------- | --------------------------------------------------------------- |
+| GET    | `/health`                 | Check the server                                                |
+| GET    | `/products`               | List products; accepts `search` and `category` query parameters |
+| GET    | `/products/:id`           | Get one product                                                 |
+| POST   | `/products`               | Create a product                                                |
+| PUT    | `/products/:id`           | Update all product fields                                       |
+| GET    | `/products/:id/movements` | Get the last 50 movements                                       |
+| POST   | `/products/:id/movements` | Record a stock entry or exit                                    |
+| GET    | `/dashboard`              | Get totals and category counts                                  |
 
-Corps d’une création/modification :
+Example product body:
 
 ```json
 {
-  "name": "Boîte de vis",
+  "name": "Box of screws",
   "reference": "OUT-003",
-  "description": "Vis de 5 mm",
-  "category": "Outillage",
+  "description": "5mm screws",
+  "category": "Tools",
   "quantity": 20,
   "threshold": 5
 }
 ```
 
-Corps d’un mouvement :
+Example movement body:
 
 ```json
 { "direction": "out", "quantity": 3 }
 ```
 
-Réponses : `201` pour une création/mouvement, `400` pour une saisie invalide, `404` pour un produit absent, `409` pour référence dupliquée ou stock insuffisant. Les erreurs renvoient `{ "message": "..." }`.
+Errors return a `message` field. Invalid input returns 400, missing products return 404, and duplicate references or insufficient stock return 409. New products and movements return 201.
 
-## Tests et vérification
+## Checks
 
 ```bash
 npm run lint
@@ -134,18 +128,27 @@ npx expo install --check
 npx expo export --platform all
 ```
 
-`npm run check` vérifie les types, compile le backend et exécute quatre tests d’intégration couvrant le CRUD, les filtres, les références dupliquées, les saisies invalides, les mouvements concurrents, l’historique, les statistiques et la persistance après réouverture de SQLite. Les tests utilisent des bases isolées ; ils ne touchent pas la base de démonstration. Le workflow GitHub Actions exécute ces vérifications et les exports.
+The integration tests cover creation, updates, filters, duplicate references, invalid input, concurrent stock exits, movement history, dashboard counts, and persistence after reopening the database. They use separate test databases. GitHub Actions runs the same checks and exports the Android, iOS, and web bundles.
 
-Parcours web vérifiés : recherche combinée avec une catégorie, formulaire vide refusé, création, modification du seuil avec changement de statut, sortie excessive refusée, entrée/sortie valide et historique, tableau de bord. Les bundles Android et iOS ont été exportés ; **aucun test sur appareil physique ou simulateur natif n’a été réalisé** dans cet environnement.
+The browser flows have been checked at a phone-sized viewport. Native bundles have been exported, but the app has not been tested on a physical phone or native simulator in this environment.
 
-## Persistance et configuration facultative
+## Optional configuration
 
-La base se trouve dans `backend/data/stock.sqlite`, créée automatiquement et exclue de Git avec ses fichiers WAL. Les données restent disponibles après redémarrage. Pour repartir de zéro, arrêter l’API, sauvegarder puis retirer les fichiers de `backend/data/` ; les données initiales seront recréées au lancement suivant.
+Defaults work for local development. If you need another setup:
 
-Variables facultatives : `DATABASE_PATH` pour le chemin SQLite, `PORT` pour le port d’une API lancée séparément, `EXPO_PUBLIC_API_URL` pour une URL d’API explicite incluant `/api`, et `STOCK_SKIP_API=1` pour désactiver le démarrage automatique (export, CI, API distante). Si le port est modifié, renseigner aussi `EXPO_PUBLIC_API_URL`. Lancer le backend seul avec `npm run api`, ou avec `npm --prefix backend run build` puis `npm --prefix backend start`.
+| Variable              | Purpose                            |
+| --------------------- | ---------------------------------- |
+| `EXPO_PUBLIC_API_URL` | API URL, including `/api`          |
+| `DATABASE_PATH`       | SQLite file path                   |
+| `PORT`                | Port for an API started separately |
+| `STOCK_SKIP_API=1`    | Skip automatic API startup         |
 
-## Limites assumées
+Use `npm run api` to run the backend separately. For a compiled backend, run `npm --prefix backend run build` followed by `npm --prefix backend start`. If you change the API port, set `EXPO_PUBLIC_API_URL` too.
 
-Le bonus tableau de bord est livré. Les notifications locales facultatives ne sont pas implémentées ; les ruptures sont visibles dans l’inventaire et le tableau de bord. L’exercice cible un entrepôt fictif sur réseau local : pas d’authentification, mode hors ligne, pagination ou déploiement de production. Pour une API publique, prévoir authentification, HTTPS et règles CORS adaptées.
+The database is ignored by Git and survives restarts. To start over, stop the server, back up the database, and remove the files in `backend/data/`. The next start recreates the sample data. Existing product text is stored as entered; changing the app language does not automatically translate custom product names.
 
-L’audit npm du backend ne signale aucune vulnérabilité. L’outillage Expo/Metro comporte encore des avis transitifs après les correctifs compatibles ; la correction forcée proposée par npm rétrograderait Expo vers une version incompatible. Les versions compatibles sont conservées et ce point doit être réévalué lors d’une mise à jour du SDK.
+## Scope
+
+The dashboard bonus is included. Local notifications are not implemented. This exercise uses a local warehouse API without authentication, offline sync, or pagination. A production deployment would need HTTPS, authentication, and restricted CORS.
+
+The backend dependency audit was clean when checked. Expo's development tooling still has transitive advisories after compatible fixes; the forced npm fix proposes an incompatible Expo downgrade, so it was not applied.

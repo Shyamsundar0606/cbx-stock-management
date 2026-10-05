@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -7,58 +7,68 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { api } from "../api";
-import { Product, StackParams, stockStatus } from "../types";
-import { Button, colors, Feedback, Status, styles } from "../components/ui";
+} from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { api } from '../api';
+import { Product, StackParams, stockStatus } from '../types';
+import { Button, colors, Feedback, styles } from '../components/ui';
+import { ProductCard } from '../components/ProductCard';
+
 export function ProductsScreen() {
-  const nav = useNavigation<NativeStackNavigationProp<StackParams>>();
+  const navigation = useNavigation<NativeStackNavigationProp<StackParams>>();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("Toutes");
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
   const [alertOnly, setAlertOnly] = useState(false);
-  const load = useCallback(async () => {
+
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
-      setProducts(await api.products());
+      setProducts(await api.getProducts());
       setError(null);
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (error) {
+      setError((error as Error).message);
     } finally {
       setLoading(false);
     }
   }, []);
+
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load]),
+      void loadProducts();
+    }, [loadProducts]),
   );
+
   const categories = [
-    "Toutes",
-    ...Array.from(new Set(products.map((p) => p.category))).sort(),
+    'All',
+    ...Array.from(new Set(products.map((product) => product.category))).sort(),
   ];
-  const query = search.trim().toLocaleLowerCase("fr");
-  const filtered = products.filter(
-    (p) =>
-      (category === "Toutes" || p.category === category) &&
-      (!alertOnly || stockStatus(p) !== "normal") &&
-      `${p.name} ${p.reference}`.toLocaleLowerCase("fr").includes(query),
-  );
-  const alerts = products.filter((p) => stockStatus(p) !== "normal").length;
+
+  const query = search.trim().toLocaleLowerCase('en');
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory = category === 'All' || product.category === category;
+    const matchesAlert = !alertOnly || stockStatus(product) !== 'normal';
+    const searchableText = [product.name, product.reference].join(' ').toLowerCase();
+
+    return matchesCategory && matchesAlert && searchableText.includes(query);
+  });
+
+  const alertCount = products.filter((product) => stockStatus(product) !== 'normal').length;
+
   return (
     <View style={styles.page}>
       <FlatList
-        data={filtered}
-        keyExtractor={(p) => String(p.id)}
+        data={filteredProducts}
+        keyExtractor={(product) => String(product.id)}
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={load}
+            onRefresh={loadProducts}
             tintColor={colors.primary}
           />
         }
@@ -69,58 +79,42 @@ export function ProductsScreen() {
                 style={{
                   color: colors.primary,
                   fontSize: 12,
-                  fontWeight: "800",
+                  fontWeight: '800',
                   letterSpacing: 2,
                   marginBottom: 8,
                 }}
               >
-                CBX / ENTREPÔT
+                CBX / WAREHOUSE
               </Text>
               <Text style={styles.title}>
-                Votre stock,
-                <Text style={{ color: colors.primary }}> en vue.</Text>
+                Your stock,
+                <Text style={{ color: colors.primary }}> at a glance.</Text>
               </Text>
               <Text style={[styles.subtitle, { marginTop: 8 }]}>
-                Un inventaire clair. Des mouvements maîtrisés.
+                Check quantities and keep track of stock changes.
               </Text>
             </View>
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: "#172F33", borderColor: "#172F33" },
-              ]}
-            >
+            <View style={[styles.card, { backgroundColor: '#172F33', borderColor: '#172F33' }]}>
               <View style={styles.row}>
                 <View>
-                  <Text style={{ color: "#ADC9C3", fontSize: 12 }}>
-                    PRODUITS RÉFÉRENCÉS
-                  </Text>
-                  <Text
-                    style={[styles.number, { color: "white", marginTop: 6 }]}
-                  >
+                  <Text style={{ color: '#ADC9C3', fontSize: 12 }}>PRODUCTS</Text>
+                  <Text style={[styles.number, { color: 'white', marginTop: 6 }]}>
                     {products.length}
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ color: "#ADC9C3", fontSize: 12 }}>
-                    À SURVEILLER
-                  </Text>
-                  <Text
-                    style={[styles.number, { color: "#F1C77A", marginTop: 6 }]}
-                  >
-                    {alerts}
+                  <Text style={{ color: '#ADC9C3', fontSize: 12 }}>NEED ATTENTION</Text>
+                  <Text style={[styles.number, { color: '#F1C77A', marginTop: 6 }]}>
+                    {alertCount}
                   </Text>
                 </View>
               </View>
             </View>
-            <Button
-              title="＋ Ajouter un produit"
-              onPress={() => nav.navigate("Form")}
-            />
+            <Button title="＋ Add product" onPress={() => navigation.navigate('Form')} />
             <TextInput
-              accessibilityLabel="Rechercher un nom ou une référence"
+              accessibilityLabel="Search by name or reference"
               style={styles.input}
-              placeholder="Rechercher un nom ou une référence…"
+              placeholder="Search by name or reference…"
               placeholderTextColor={colors.muted}
               value={search}
               onChangeText={setSearch}
@@ -130,15 +124,15 @@ export function ProductsScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 8 }}
             >
-              {categories.map((c) => (
+              {categories.map((categoryName) => (
                 <Pressable
-                  key={c}
+                  key={categoryName}
                   accessibilityRole="button"
-                  accessibilityState={{ selected: category === c }}
-                  onPress={() => setCategory(c)}
+                  accessibilityState={{ selected: category === categoryName }}
+                  onPress={() => setCategory(categoryName)}
                   style={[
                     styles.chip,
-                    category === c && {
+                    category === categoryName && {
                       backgroundColor: colors.primary,
                       borderColor: colors.primary,
                     },
@@ -146,74 +140,38 @@ export function ProductsScreen() {
                 >
                   <Text
                     style={{
-                      fontWeight: "600",
-                      color: category === c ? "white" : colors.muted,
+                      fontWeight: '600',
+                      color: category === categoryName ? 'white' : colors.muted,
                     }}
                   >
-                    {c}
+                    {categoryName}
                   </Text>
                 </Pressable>
               ))}
             </ScrollView>
             <View style={styles.row}>
               <Text style={styles.section}>
-                Inventaire{" "}
-                <Text style={styles.subtitle}>({filtered.length})</Text>
+                Inventory <Text style={styles.subtitle}>({filteredProducts.length})</Text>
               </Text>
               <Pressable
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: alertOnly }}
                 onPress={() => setAlertOnly(!alertOnly)}
-                style={{ minHeight: 44, justifyContent: "center" }}
+                style={{ minHeight: 44, justifyContent: 'center' }}
               >
-                <Text style={{ color: colors.primary, fontWeight: "600" }}>
-                  {alertOnly ? "☑" : "☐"} Alertes seules
+                <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                  {alertOnly ? '☑' : '☐'} Alerts only
                 </Text>
               </Pressable>
             </View>
-            {error && <Feedback error={error} retry={load} />}
+            {error && <Feedback error={error} retry={loadProducts} />}
           </View>
         }
-        renderItem={({ item: p }) => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${p.name}, ${p.quantity} en stock, ouvrir le détail`}
-            onPress={() => nav.navigate("Detail", { id: p.id })}
-            style={({ pressed }) => [
-              styles.card,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <View style={styles.row}>
-              <Text
-                style={{
-                  color: colors.muted,
-                  fontSize: 12,
-                  fontWeight: "600",
-                  flex: 1,
-                }}
-              >
-                {p.category.toUpperCase()} · {p.reference}
-              </Text>
-              <Status product={p} />
-            </View>
-            <Text
-              style={{ fontSize: 18, color: colors.ink, fontWeight: "700" }}
-            >
-              {p.name}
-            </Text>
-            <View style={styles.row}>
-              <Text style={styles.subtitle}>
-                <Text
-                  style={{ fontSize: 24, fontWeight: "800", color: colors.ink }}
-                >
-                  {p.quantity}
-                </Text>{" "}
-                unités disponibles
-              </Text>
-              <Text style={styles.subtitle}>Seuil : {p.threshold} ›</Text>
-            </View>
-          </Pressable>
+        renderItem={({ item: product }) => (
+          <ProductCard
+            product={product}
+            onPress={() => navigation.navigate('Detail', { id: product.id })}
+          />
         )}
         ListEmptyComponent={
           loading ? (
@@ -221,14 +179,12 @@ export function ProductsScreen() {
           ) : !error ? (
             <View style={styles.card}>
               <Text style={styles.section}>
-                {products.length
-                  ? "Aucun résultat"
-                  : "Votre inventaire est vide"}
+                {products.length ? 'No matching products' : 'Your inventory is empty'}
               </Text>
               <Text style={styles.subtitle}>
                 {products.length
-                  ? "Essayez une autre recherche ou catégorie."
-                  : "Ajoutez votre premier produit pour commencer."}
+                  ? 'Try another search or category.'
+                  : 'Add your first product to get started.'}
               </Text>
             </View>
           ) : null

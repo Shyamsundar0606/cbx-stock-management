@@ -1,114 +1,110 @@
-import React, { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { api } from "../api";
-import { Dashboard } from "../types";
-import { colors, Feedback, styles } from "../components/ui";
+import React, { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { api } from '../api';
+import { Dashboard } from '../types';
+import { colors, Feedback, styles } from '../components/ui';
+
 export function DashboardScreen() {
-  const [data, setData] = useState<Dashboard | null>(null);
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const load = useCallback(async () => {
+
+  const loadDashboard = useCallback(async () => {
     setLoading(true);
     try {
-      setData(await api.dashboard());
+      setDashboard(await api.getDashboard());
       setError(null);
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (error) {
+      setError((error as Error).message);
     } finally {
       setLoading(false);
     }
   }, []);
+
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load]),
+      void loadDashboard();
+    }, [loadDashboard]),
   );
+  const largestCategory = Math.max(
+    1,
+    ...(dashboard?.categories.map((category) => category.count) || []),
+  );
+
   return (
     <ScrollView
       style={styles.page}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={loadDashboard} />}
     >
       <View>
-        <Text style={styles.title}>Vue d’ensemble</Text>
+        <Text style={styles.title}>Overview</Text>
         <Text style={[styles.subtitle, { marginTop: 8 }]}>
-          Les bons chiffres pour anticiper vos besoins.
+          See what is available and what needs restocking.
         </Text>
       </View>
       {error ? (
-        <Feedback error={error} retry={load} />
-      ) : !data ? (
+        <Feedback error={error} retry={loadDashboard} />
+      ) : !dashboard ? (
         <Feedback loading />
       ) : (
         <>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {[
-              { label: "Produits", value: data.total, color: colors.ink },
+              { label: 'Products', value: dashboard.total, color: colors.ink },
               {
-                label: "Unités en stock",
-                value: data.units,
+                label: 'Units in stock',
+                value: dashboard.units,
                 color: colors.primary,
               },
               {
-                label: "En rupture",
-                value: data.outOfStock,
+                label: 'Out of stock',
+                value: dashboard.outOfStock,
                 color: colors.red,
               },
               {
-                label: "Stock faible",
-                value: data.lowStock,
+                label: 'Low stock',
+                value: dashboard.lowStock,
                 color: colors.amber,
               },
-            ].map((x) => (
-              <View
-                key={x.label}
-                style={[styles.card, { flexGrow: 1, flexBasis: "45%" }]}
-              >
-                <Text style={styles.subtitle}>{x.label}</Text>
-                <Text style={[styles.number, { color: x.color }]}>
-                  {x.value}
-                </Text>
+            ].map((stat) => (
+              <View key={stat.label} style={[styles.card, { flexGrow: 1, flexBasis: '45%' }]}>
+                <Text style={styles.subtitle}>{stat.label}</Text>
+                <Text style={[styles.number, { color: stat.color }]}>{stat.value}</Text>
               </View>
             ))}
           </View>
           <View style={styles.card}>
-            <Text style={styles.section}>Répartition par catégorie</Text>
-            <Text style={styles.subtitle}>Nombre de produits référencés</Text>
-            {data.categories.length === 0 ? (
-              <Text style={styles.subtitle}>
-                Ajoutez un produit pour afficher la répartition.
-              </Text>
+            <Text style={styles.section}>Products by category</Text>
+            <Text style={styles.subtitle}>Number of products in each category</Text>
+            {dashboard.categories.length === 0 ? (
+              <Text style={styles.subtitle}>Add a product to see the category breakdown.</Text>
             ) : (
-              data.categories.map((c, i) => (
+              dashboard.categories.map((category, index) => (
                 <View
-                  key={c.category}
-                  accessibilityLabel={`${c.category} : ${c.count} produits`}
+                  key={category.category}
+                  accessibilityLabel={`${category.category} : ${category.count} products`}
                   style={{ gap: 8, marginTop: 8 }}
                 >
                   <View style={styles.row}>
-                    <Text style={styles.label}>{c.category}</Text>
-                    <Text style={styles.label}>{c.count}</Text>
+                    <Text style={styles.label}>{category.category}</Text>
+                    <Text style={styles.label}>{category.count}</Text>
                   </View>
                   <View
                     style={{
                       height: 12,
-                      backgroundColor: "#EEF2F3",
+                      backgroundColor: '#EEF2F3',
                       borderRadius: 6,
-                      overflow: "hidden",
+                      overflow: 'hidden',
                     }}
                   >
                     <View
                       style={{
                         height: 12,
-                        width: `${(c.count / Math.max(...data.categories.map((x) => x.count))) * 100}%`,
+                        width: `${(category.count / largestCategory) * 100}%`,
                         borderRadius: 6,
-                        backgroundColor: [
-                          "#12695C",
-                          "#59948A",
-                          "#A1BBB0",
-                          "#D4AF6D",
-                        ][i % 4],
+                        backgroundColor: ['#12695C', '#59948A', '#A1BBB0', '#D4AF6D'][index % 4],
                       }}
                     />
                   </View>
@@ -116,14 +112,11 @@ export function DashboardScreen() {
               ))
             )}
           </View>
-          <View style={[styles.card, { backgroundColor: "#E8F4EE" }]}>
-            <Text style={styles.section}>
-              Anticiper, c’est gagner du temps.
-            </Text>
+          <View style={[styles.card, { backgroundColor: '#E8F4EE' }]}>
+            <Text style={styles.section}>When does stock need attention?</Text>
             <Text style={styles.subtitle}>
-              Le stock faible correspond aux produits dont la quantité est
-              positive et inférieure ou égale au seuil. Les ruptures sont
-              comptées séparément.
+              Low stock means the quantity is above zero but at or below the alert threshold.
+              Out-of-stock products are counted separately.
             </Text>
           </View>
         </>

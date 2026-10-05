@@ -1,16 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect, usePreventRemove } from "@react-navigation/native";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { api } from "../api";
-import { StackParams } from "../types";
-import { Button, Feedback, Field, styles } from "../components/ui";
+import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, usePreventRemove } from '@react-navigation/native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { api } from '../api';
+import { StackParams } from '../types';
+import { Button, Feedback, Field, styles } from '../components/ui';
 type Values = {
   name: string;
   reference: string;
@@ -19,18 +13,42 @@ type Values = {
   quantity: string;
   threshold: string;
 };
-export function FormScreen({
-  route,
-  navigation,
-}: NativeStackScreenProps<StackParams, "Form">) {
+
+const textFields = [
+  { key: 'name', label: 'Name *', placeholder: 'e.g. Safety helmet' },
+  { key: 'reference', label: 'Unique reference *', placeholder: 'e.g. SEC-003' },
+  { key: 'category', label: 'Category *', placeholder: 'e.g. Safety' },
+  { key: 'description', label: 'Description', placeholder: 'Add a few details about this product' },
+] as const;
+
+function validateForm(values: Values): Partial<Values> {
+  const errors: Partial<Values> = {};
+
+  for (const field of ['name', 'reference', 'category'] as const) {
+    if (!values[field].trim() || values[field].trim().length > 100) {
+      errors[field] = 'Required. Please use 100 characters or fewer.';
+    }
+  }
+  for (const field of ['quantity', 'threshold'] as const) {
+    if (!/^\d+$/.test(values[field]) || Number(values[field]) > 1_000_000) {
+      errors[field] = 'Enter a whole number from 0 to 1,000,000.';
+    }
+  }
+  if (values.description.length > 2_000) {
+    errors.description = 'Please use 2,000 characters or fewer.';
+  }
+  return errors;
+}
+
+export function FormScreen({ route, navigation }: NativeStackScreenProps<StackParams, 'Form'>) {
   const id = route.params?.id;
   const [values, setValues] = useState<Values>({
-    name: "",
-    reference: "",
-    category: "",
-    description: "",
-    quantity: "0",
-    threshold: "5",
+    name: '',
+    reference: '',
+    category: '',
+    description: '',
+    quantity: '0',
+    threshold: '5',
   });
   const [errors, setErrors] = useState<Partial<Values>>({});
   const [loading, setLoading] = useState(!!id);
@@ -38,58 +56,65 @@ export function FormScreen({
   const [savedId, setSavedId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const load = useCallback(async () => {
-    if (!id) return;
+
+  const loadProduct = useCallback(async () => {
+    if (!id) {
+      return;
+    }
     try {
-      const p = await api.product(id);
+      const product = await api.getProduct(id);
       setValues({
-        name: p.name,
-        reference: p.reference,
-        category: p.category,
-        description: p.description,
-        quantity: String(p.quantity),
-        threshold: String(p.threshold),
+        name: product.name,
+        reference: product.reference,
+        category: product.category,
+        description: product.description,
+        quantity: String(product.quantity),
+        threshold: String(product.threshold),
       });
       setLoadError(null);
-    } catch (e) {
-      setLoadError((e as Error).message);
+    } catch (error) {
+      setLoadError((error as Error).message);
     } finally {
       setLoading(false);
     }
   }, [id]);
+
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load]),
+      void loadProduct();
+    }, [loadProduct]),
   );
+
   usePreventRemove(saving, () => {});
+
   useEffect(() => {
     if (!saving && savedId !== null) {
-      if (id) navigation.popTo("Detail", { id: savedId });
-      else navigation.replace("Detail", { id: savedId });
+      if (id) {
+        navigation.popTo('Detail', { id: savedId });
+      } else {
+        navigation.replace('Detail', { id: savedId });
+      }
     }
   }, [saving, savedId, navigation, id]);
-  const change = (key: keyof Values, value: string) => {
-    setValues((v) => ({ ...v, [key]: value }));
-    setErrors((e) => ({ ...e, [key]: undefined }));
+
+  const updateField = (key: keyof Values, value: string) => {
+    setValues((currentValues) => ({ ...currentValues, [key]: value }));
+    setErrors((currentErrors) => ({ ...currentErrors, [key]: undefined }));
   };
-  const save = async () => {
-    if (saving) return;
-    const issues: Partial<Values> = {};
-    for (const k of ["name", "reference", "category"] as const)
-      if (!values[k].trim() || values[k].trim().length > 100)
-        issues[k] = "Champ obligatoire, 100 caractères maximum.";
-    for (const k of ["quantity", "threshold"] as const)
-      if (!/^\d+$/.test(values[k]) || Number(values[k]) > 1000000)
-        issues[k] = "Entier entre 0 et 1 000 000.";
-    if (values.description.length > 2000)
-      issues.description = "2000 caractères maximum.";
+
+  const saveProduct = async () => {
+    if (saving) {
+      return;
+    }
+    const issues = validateForm(values);
     setErrors(issues);
-    if (Object.keys(issues).length) return;
+    if (Object.keys(issues).length) {
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      const p = await api.save(
+      const product = await api.saveProduct(
         {
           ...values,
           name: values.name.trim(),
@@ -100,95 +125,64 @@ export function FormScreen({
         },
         id,
       );
-      setSavedId(p.id);
+      setSavedId(product.id);
       setSaving(false);
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (error) {
+      setError((error as Error).message);
       setSaving(false);
     }
   };
+
   return (
     <KeyboardAvoidingView
       style={styles.page}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View>
-          <Text style={styles.title}>
-            {id ? "Modifier le produit" : "Nouveau produit"}
-          </Text>
-          <Text style={[styles.subtitle, { marginTop: 8 }]}>
-            Les champs marqués * sont obligatoires.
-          </Text>
+          <Text style={styles.title}>{id ? 'Edit product' : 'New product'}</Text>
+          <Text style={[styles.subtitle, { marginTop: 8 }]}>Fields marked * are required.</Text>
         </View>
         {loading ? (
           <Feedback loading />
         ) : loadError ? (
-          <Feedback error={loadError} retry={load} />
+          <Feedback error={loadError} retry={loadProduct} />
         ) : (
           <>
             <View style={styles.card}>
-              {(
-                [
-                  {
-                    key: "name",
-                    label: "Nom *",
-                    placeholder: "Ex. Casque de protection",
-                  },
-                  {
-                    key: "reference",
-                    label: "Référence unique *",
-                    placeholder: "Ex. SEC-003",
-                  },
-                  {
-                    key: "category",
-                    label: "Catégorie *",
-                    placeholder: "Ex. Sécurité",
-                  },
-                  {
-                    key: "description",
-                    label: "Description",
-                    placeholder: "Informations complémentaires",
-                  },
-                ] as const
-              ).map((f) => (
+              {textFields.map((field) => (
                 <Field
-                  key={f.key}
-                  label={f.label}
-                  value={values[f.key]}
-                  placeholder={f.placeholder}
-                  onChangeText={(v) => change(f.key, v)}
-                  error={errors[f.key]}
+                  key={field.key}
+                  label={field.label}
+                  value={values[field.key]}
+                  placeholder={field.placeholder}
+                  onChangeText={(value) => updateField(field.key, value)}
+                  error={errors[field.key]}
                   editable={!saving}
-                  multiline={f.key === "description"}
-                  autoCapitalize={
-                    f.key === "reference" ? "characters" : "sentences"
-                  }
+                  multiline={field.key === 'description'}
+                  autoCapitalize={field.key === 'reference' ? 'characters' : 'sentences'}
                 />
               ))}
               <Field
-                label={id ? "Quantité en stock *" : "Quantité initiale *"}
+                label={id ? 'Stock quantity *' : 'Initial quantity *'}
                 keyboardType="number-pad"
                 value={values.quantity}
-                onChangeText={(v) => change("quantity", v)}
+                onChangeText={(value) => updateField('quantity', value)}
                 error={errors.quantity}
                 editable={!saving}
               />
               <Field
-                label="Seuil d’alerte *"
+                label="Alert threshold *"
                 keyboardType="number-pad"
                 value={values.threshold}
-                onChangeText={(v) => change("threshold", v)}
+                onChangeText={(value) => updateField('threshold', value)}
                 error={errors.threshold}
                 editable={!saving}
               />
               {id && (
                 <Text style={styles.subtitle}>
-                  La modification de quantité corrige l’inventaire. Pour tracer
-                  une entrée ou une sortie, utilisez les boutons du détail.
+                  Changing the quantity here corrects the inventory. Use Add stock or Remove stock
+                  on the product page to record a movement.
                 </Text>
               )}
             </View>
@@ -198,18 +192,12 @@ export function FormScreen({
               </Text>
             )}
             <Button
-              title={
-                saving
-                  ? "Enregistrement…"
-                  : id
-                    ? "Enregistrer les modifications"
-                    : "Créer le produit"
-              }
+              title={saving ? 'Saving…' : id ? 'Save changes' : 'Create product'}
               disabled={saving}
-              onPress={save}
+              onPress={saveProduct}
             />
             <Button
-              title="Annuler"
+              title="Cancel"
               secondary
               disabled={saving}
               onPress={() => navigation.goBack()}

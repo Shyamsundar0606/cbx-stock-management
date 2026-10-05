@@ -1,4 +1,5 @@
-import { ProductInput } from "../models/Product";
+import { ProductInput } from '../models/Product';
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -7,32 +8,43 @@ export class ApiError extends Error {
     super(message);
   }
 }
-export const integer = (v: unknown, min = 0): v is number =>
-  typeof v === "number" && Number.isSafeInteger(v) && v >= min && v <= 1000000;
-export function validate(body: Record<string, unknown>): ProductInput {
-  const p = {} as ProductInput;
-  for (const key of ["name", "reference", "category"] as const) {
-    if (
-      typeof body[key] !== "string" ||
-      !body[key].trim() ||
-      body[key].trim().length > 100
-    )
-      throw new ApiError(
-        400,
-        `Le champ ${key} est obligatoire (100 caractères maximum).`,
-      );
-    p[key] = body[key].trim();
+
+export function isValidQuantity(value: unknown, minimum = 0): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isSafeInteger(value) &&
+    value >= minimum &&
+    value <= 1_000_000
+  );
+}
+
+function requiredText(body: Record<string, unknown>, field: string): string {
+  const value = body[field];
+  if (typeof value !== 'string' || !value.trim() || value.trim().length > 100) {
+    throw new ApiError(400, `${field} is required and must be 100 characters or fewer.`);
   }
-  if (
-    body.description !== undefined &&
-    (typeof body.description !== "string" || body.description.length > 2000)
-  )
-    throw new ApiError(400, "Description invalide.");
-  p.description = (body.description as string | undefined)?.trim() || "";
-  for (const key of ["quantity", "threshold"] as const) {
-    if (!integer(body[key]))
-      throw new ApiError(400, "Quantité et seuil : entiers de 0 à 1 000 000.");
-    p[key] = body[key];
+  return value.trim();
+}
+
+export function validateProduct(body: Record<string, unknown>): ProductInput {
+  const name = requiredText(body, 'name');
+  const reference = requiredText(body, 'reference');
+  const category = requiredText(body, 'category');
+  const description = body.description === undefined ? '' : body.description;
+
+  if (typeof description !== 'string' || description.length > 2_000) {
+    throw new ApiError(400, 'Description must be text and no longer than 2,000 characters.');
   }
-  return p;
+  if (!isValidQuantity(body.quantity) || !isValidQuantity(body.threshold)) {
+    throw new ApiError(400, 'Quantity and threshold must be whole numbers from 0 to 1,000,000.');
+  }
+
+  return {
+    name,
+    reference,
+    category,
+    description: description.trim(),
+    quantity: body.quantity,
+    threshold: body.threshold,
+  };
 }
